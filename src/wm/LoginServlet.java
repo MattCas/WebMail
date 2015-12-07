@@ -14,6 +14,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import com.sun.mail.imap.IMAPFolder;
 
@@ -23,24 +24,27 @@ import com.sun.mail.imap.IMAPFolder;
 @WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-    public LoginServlet() {
-        super();
-        // TODO Auto-generated constructor stub
-    }
+
+	/**
+	 * @see HttpServlet#HttpServlet()
+	 */
+	public LoginServlet() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
+		HttpSession session = request.getSession();
 		String getname=request.getParameter("username");  
-	    String getpassword=request.getParameter("password");
-	    
-	    Properties props = new Properties();
+		String getpassword=request.getParameter("password");
+		session.setAttribute("un", getname);
+		session.setAttribute("pwd", getpassword);
+
+		Properties props = new Properties();
 		Store store = null;	
 
 		//Set mail properties to Properties object
@@ -55,9 +59,6 @@ public class LoginServlet extends HttpServlet {
 			store = ssn.getStore("imaps");
 			//Store new connects to the imap server (Gmail in this case) 
 			store.connect("imap.googlemail.com", getname, getpassword);
-			//Store a folder in the variable (Hardcoded Inbox in this case)
-			IMAPFolder inbox = (IMAPFolder) store.getFolder("Inbox");
-			IMAPFolder spam = (IMAPFolder) store.getFolder("[Gmail]/Spam");
 		}catch (NoSuchProviderException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -65,21 +66,20 @@ public class LoginServlet extends HttpServlet {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-	    
-	    response.setContentType("text/html");  
-	    PrintWriter out = response.getWriter();  
-	          
-	    if(store.isConnected()){  
-	        RequestDispatcher rd=request.getRequestDispatcher("FolderServlet");  
-	        rd.forward(request, response);  
-	    }  
-	    else{   
-	    	out.println("Connection failed! Please try again!");   
-	        RequestDispatcher rd=request.getRequestDispatcher("/index.html");
-	        // Why we use include??
-	        rd.include(request, response);  
-	                      
-	        }  			
+
+		response.setContentType("text/html");  
+		PrintWriter out = response.getWriter();  
+
+		if(store.isConnected()){  
+			RequestDispatcher rd=request.getRequestDispatcher("/sender.jsp");  
+			rd.forward(request, response);  
+		}  
+		else{   
+			out.println("Connection failed! Please try again!");   
+			RequestDispatcher rd=request.getRequestDispatcher("/index.html");
+			// Why we use include??
+			rd.include(request, response);  	                      
+		}  			
 	}
 
 	/**
